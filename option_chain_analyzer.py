@@ -148,7 +148,7 @@ class OptionsChainAnalyzer:
                 ['Market View_CE', 'StrikePriceStatus_CE', 'lastPrice_CE', 'change_CE', 'strikePrice_CE', 'StrikePriceStatus_PE',
                  'lastPrice_PE', 'change_PE', 'Market View_PE',
                  'openInterest_CE', 'changeinOpenInterest_CE', 'openInterest_PE', 'changeinOpenInterest_PE']].copy()
-            return df_final,sorted_ce,sorted_pe,R1,R2,R3,spot_price
+            return df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3
             # Plot the chart
     def display_charts(self, df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3, current_datetime):
             fig = go.Figure()
