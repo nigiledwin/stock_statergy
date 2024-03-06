@@ -276,9 +276,9 @@ def option_analysis():
             
 
 # Add navigation to different pages
-page = st.sidebar.radio("Select Page", ['Stock Analysis', 'Gap_Analysis'])
+page = st.sidebar.radio("Select Page", ['Stock_Statergies', 'Stock_Option_Analysis'])
 
-if page == 'Stock Analysis':
+if page == 'Stock_Statergies':
     # Sidebar layout
     st.sidebar.title('Input Parameters')
 
@@ -478,5 +478,5 @@ if page == 'Stock Analysis':
         st.write(df_full)
     elif Statergy == '3':
         None
-elif page == 'Gap_Analysis':
+elif page == 'Stock_Option_Analysis':
     option_analysis()
