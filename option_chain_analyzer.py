@@ -148,7 +148,7 @@ class OptionsChainAnalyzer:
                 ['Market View_CE', 'StrikePriceStatus_CE', 'lastPrice_CE', 'change_CE', 'strikePrice_CE', 'StrikePriceStatus_PE',
                  'lastPrice_PE', 'change_PE', 'Market View_PE',
                  'openInterest_CE', 'changeinOpenInterest_CE', 'openInterest_PE', 'changeinOpenInterest_PE']].copy()
-            return df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3
+            return df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3,S1, S2, S3, current_datetime
             # Plot the chart
     def display_charts(self, df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3, current_datetime):
             fig = go.Figure()
@@ -167,7 +167,7 @@ class OptionsChainAnalyzer:
                 fig.add_trace(go.Scatter(y=df_market_view['strikePrice_CE'], x=df_market_view['lastPrice_PE'], mode='markers',
                                         name='Last Price PE (' + market_view + ')', hoverinfo='x+y+text', text=hover_text_PE))
 
-            fig.update_layout(title=f'Last Prices for CE and PE Across Strike Prices for {spot_price} at {current_datetime} and 1st Resistance {R1}, 2nd Resistance {R2}, 3rd Resistance {R3} -Support {S1}{S2}{S3}',
+            fig.update_layout(title=f'Last Prices for CE and PE Across Strike Prices for {spot_price} at {current_datetime} and 1st Resistance {R1}, 2nd Resistance {R2}, 3rd Resistance {R3} -Support ',
                             xaxis_title='Strike Price',
                             yaxis_title='Last Price',
                             yaxis=dict(tickformat=",.0f"))
@@ -189,9 +189,9 @@ class OptionsChainAnalyzer:
 
             # Display DataFrame and bar chart
             st.write("DataFrame with Strike Prices for Call and Put Options:")
-            st.write(df_strike_prices)
+            #st.write(df_strike_prices)
             st.plotly_chart(fig_bar)    
-            st.write(df_strike_prices)
+            #st.write(df_strike_prices)
 
 
 if __name__ == "__main__":

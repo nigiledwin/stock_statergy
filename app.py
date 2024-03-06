@@ -239,13 +239,13 @@ def option_analysis():
         # Submit button
         
         if st.sidebar.button("Submit"):
-            df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3=analyzer.modify_data(data,expiry_date)
+            df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3,S1, S2, S3, current_datetime=analyzer.modify_data(data,expiry_date)
             st.write(sorted_ce)            
-            #if data:
+            if data:
             #st.write(data)
             #call modify_data function from optionAnalyser to create options dataframe
             #df_final=analyzer.modify_data(data,expiry_date)
-                #analyzer.display_charts(df_final)
+                analyzer.display_charts(df_final, sorted_ce, sorted_pe, spot_price, R1, R2, R3, current_datetime)
             #st.write(data)
 
 #Option Greeks Page   
