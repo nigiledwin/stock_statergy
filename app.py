@@ -9,72 +9,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 import calendar
 
-# Function to determine if a given date is an expiry day
-def is_expiry_day(date):
-    # Check if the date is the last Thursday of the month (monthly expiry)
-    if date.weekday() == 2 and date.day > (calendar.monthrange(date.year, date.month)[1] - 7):
-        return 'Monthly Expiry'
-    # Check if the date is a Friday (weekly expiry for indices)
-    elif date.weekday() == 2:
-        return 'Weekly Expiry'
-    else:
-        return 'Not Expiry Day'
-# Function determine the gap up basket based on its values    
-def gap_per(gap):
-    if gap>1000:
-        return '1000 an more'
-    elif gap<1000 and gap >750 :
-        return '750-1000'
-    elif gap<750 and gap >500 :
-        return '500-750'
-    elif gap<500 and gap >3000 :
-        return '300-500'
-    elif gap<300 and gap >100 :
-        return '100-300'
-    elif gap<100 and gap >50 :
-        return '50-100'
-    elif gap<50 and gap >-50 :
-        return '-50-50'
-    elif gap<-50 and gap >-100 :
-        return 'Negative 50-100'
-    elif gap<-100 and gap >-300 :
-        return 'Negative 100-300'
-    elif gap<-300 and gap >-500 :
-        return 'Negative -300-500'
-    elif gap<-500 and gap >-750 :
-        return 'Negative 500-750'
-    elif gap<-750 and gap >-1000:
-        return 'Negative -750-1000'
-    elif gap<-1000:
-        return 'More than -1000'
-    
-# Function for moving average crossover strategy
-def moving_avg_crossover(data, short_window, long_window):
-    data['SMA_short'] = data['Close'].rolling(window=short_window).mean()
-    data['SMA_long'] = data['Close'].rolling(window=long_window).mean()
-    data['previous_SMA_Long']=data['SMA_long'].shift(1)
-    def buy_sell_signals(row):
-        if row['SMA_long'] > row['SMA_short'] and row['previous_SMA_Long'] < row['SMA_short']:
-            return 'Bullish Crossover'
-        elif row['SMA_long'] < row['SMA_short'] and row['previous_SMA_Long'] > row['SMA_short']:
-            return 'Bearish Crossover' 
-        else:
-            return None  
-    
-    data['Signal_Type'] = data.apply(buy_sell_signals, axis=1)
-    # Calculate MACD
-    data['ema_12'] = data['Close'].ewm(span=12, min_periods=0, adjust=True).mean()
-    data['ema_26'] = data['Close'].ewm(span=26, min_periods=0, adjust=True).mean()
-    data['MACD'] = data['ema_12'] - data['ema_26']
-    data['Signal_line'] = data['MACD'].ewm(span=9, min_periods=0, adjust=True).mean()
-    data['Histogram'] = data['MACD'] - data['Signal_line']
-    data['Date_only'] = pd.to_datetime(data['Date']).dt.date
-    data['Year'] = data['Date'].dt.year
-    data['Month'] = data['Date'].dt.month
-    data['Day'] = data['Date'].dt.day
-    data['Day_of_Week'] = data['Date'].dt.day_name()
-    #Determine if the date corresponds to an expiry day (monthly or weekly)
-    data['Expiry_Day'] = data.apply(lambda row: is_expiry_day(row['Date']), axis=1)
+
 
 
 # Function to display Nifty and Bank Nifty analysis
@@ -103,35 +38,26 @@ def option_analysis():
         start_date = datetime.now() - timedelta(days=no_backdays)
         end_date = datetime.now()
 
-        # User input for short and long EMA windows
-        #short_window = st.sidebar.selectbox('Select short EMA window:', [10, 20, 50])
-        #long_window = st.sidebar.selectbox('Select long EMA window:', [50, 200])
 
-        # Get stock data
-        #symbols = ['^NSEBANK', '^NSEI','^INDIAVIX']
         from fetch_data_yf import fetch_data_yf
         fetch_data=fetch_data_yf()
 
         df_full = fetch_data.fetch_stock_data([symbols_select], start_date, end_date, interval)
 
-        # Calculate gap up and gap down values
-        for i in range(len(df_full)):
-            df_full[i]['PrevClose'] = df_full[i]['Close'].shift(1)
-            df_full[i]['Gap'] = df_full[i]['Open'] - df_full[i]['PrevClose']
-            df_full[i]['Gap_Up'] = np.where(df_full[i]['Gap'] > 0, df_full[i]['Gap'], np.nan)
-            df_full[i]['Gap_Down'] = np.where(df_full[i]['Gap'] < 0, df_full[i]['Gap'], np.nan)
-            df_full[i]['Gap_categeory'] = df_full[i].apply(lambda row: gap_per(row['Gap']), axis=1)
-
-        # Apply moving average strategy
-        for symbol_df in df_full:
-            moving_avg_crossover(symbol_df, 20, 50)
 
 
+        # Apply all modification methods from options_functions _class
+        for df in df_full:
+            from options_functions import options_functions_class
+            options_func=options_functions_class()
+            df=options_func.add_date(df)
+            df=options_func.gapup_gapdown(df)
+            df['Expiry_Day'] = df.apply(lambda row: options_func.is_expiry_day(row['Date']), axis=1)
+            df['Gap_categeory'] = df.apply(lambda row: options_func.gap_per_cat(row['Gap']), axis=1)
+
+
+        # Adding visualization
         
-
-
-        # Add your visualization code here
-        # Example:
         for i in range(len(df_full)):
             fig = go.Figure()
             
@@ -203,6 +129,10 @@ def option_analysis():
                                                     #line=dict(color='red', width=2), name='Normal Distribution'))
         st.write(df_full[i])
         st.write(df_full[i]['Gap_categeory'].value_counts(normalize=True) * 100)
+
+
+
+
     elif Statergy =='OI_Analysis':
         #import optionchainAnalyzer class from option_chain_analyzer
         from option_chain_analyzer import OptionsChainAnalyzer
