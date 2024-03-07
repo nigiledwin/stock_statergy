@@ -9,26 +9,6 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 import calendar
 
-# Function to get stock data
-def get_stock_data(symbols, start_date, end_date, time_frame):
-    df_full = []
-
-    for symbol in symbols:
-        try:
-            data = yf.download(symbol, start=start_date, end=end_date, interval=time_frame)
-            data['Symbol'] = symbol
-            data.reset_index(inplace=True)
-            #data['Year'] = data['Date'].dt.year
-            #data['Month'] = data['Date'].dt.month
-            #data['Day'] = data['Date'].dt.day
-            #data['Day_of_Week'] = data['Date'].dt.day_name()
-            #Determine if the date corresponds to an expiry day (monthly or weekly)
-            #data['Expiry_Day'] = data.apply(lambda row: is_expiry_day(row['Date']), axis=1)
-            df_full.append(data)
-        except Exception as e:
-            print(f"Error fetching data for {symbol}: {str(e)}")
-
-    return df_full
 # Function to determine if a given date is an expiry day
 def is_expiry_day(date):
     # Check if the date is the last Thursday of the month (monthly expiry)
@@ -129,7 +109,10 @@ def option_analysis():
 
         # Get stock data
         #symbols = ['^NSEBANK', '^NSEI','^INDIAVIX']
-        df_full = get_stock_data([symbols_select], start_date, end_date, interval)
+        from fetch_data_yf import fetch_data_yf
+        fetch_data=fetch_data_yf()
+
+        df_full = fetch_data.fetch_stock_data([symbols_select], start_date, end_date, interval)
 
         # Calculate gap up and gap down values
         for i in range(len(df_full)):
@@ -143,9 +126,7 @@ def option_analysis():
         for symbol_df in df_full:
             moving_avg_crossover(symbol_df, 20, 50)
 
-        # Display dataframe for Bank Nifty
-        #st.write('Bank Nifty Data:')
-        #st.write(df_full[0])
+
         
 
 
@@ -321,8 +302,12 @@ if page == 'Stock_Statergies':
 
             # Submit button
             if st.sidebar.button('Submit'):
-                df_full = get_stock_data(stock_index, start_date, end_date, interval)
-                
+              #importing fetch_stock_data function  
+                from fetch_data_yf import fetch_data_yf
+                fetch_data=fetch_data_yf()
+
+                df_full = fetch_data.fetch_stock_data(stock_index, start_date, end_date, interval)
+             
                 # Apply moving average strategy
                 for tickers in df_full:
                     tickers['SMA_short'] = tickers['Close'].rolling(window=short_window).mean()
