@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import yfinance as yt
 import json
 import numpy as np
 import plotly.graph_objs as go

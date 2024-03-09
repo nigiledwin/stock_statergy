@@ -13,7 +13,7 @@ class OptionsChainAnalyzer_class:
         pass
 
         # Function to display Nifty and Bank Nifty analysis
-    def stock_statergy_page_func(self,Statergy): 
+    def option_analysis_page_func(self,Statergy): 
         if Statergy =='Gap_Analysis':
             st.title('Gap_Up & Gap_down Analysis')
 
