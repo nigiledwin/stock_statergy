@@ -6,7 +6,7 @@ import numpy as np
 import plotly.graph_objs as go
 import datetime
 
-class OptionsChainAnalyzer:
+class OptionsChainAnalyzer_class:
     def __init__(self):
         pass
 
@@ -113,11 +113,11 @@ class OptionsChainAnalyzer:
             df = pd.concat([df_ce, df_pe], axis=1)
 
             # Filtering only strike price in the range of Spot price +-1000
-            filtervalue = 2000
+            filtervalue = 500
             df_filtered = df[(df['strikePrice_CE'] > (round(spot_price / 100) * 100) - filtervalue) & (
                         df['strikePrice_CE'] < (round(spot_price / 100) * 100) + filtervalue)]
             columns_to_keep = ['underlying_CE', 'expiryDate_CE', 'strikePrice_CE', 'StrikePriceStatus_CE', 'label', 'openInterest_CE',
-                               'changeinOpenInterest_CE', 'totalTradedVolume_CE', 'lastPrice_CE', 'change_CE', 'openInterest_PE',
+                               'changeinOpenInterest_CE', 'totalTradedVolume_CE', 'lastPrice_CE', 'change_CE', 'openInterest_PE','strikePrice_PE',
                                'changeinOpenInterest_PE', 'totalTradedVolume_PE', 'lastPrice_PE', 'change_PE', 'StrikePriceStatus_PE']
             df_final = df_filtered[columns_to_keep].copy()
 
@@ -194,19 +194,3 @@ class OptionsChainAnalyzer:
             #st.write(df_strike_prices)
 
 
-if __name__ == "__main__":
-    # Example usage
-    analyzer = OptionsChainAnalyzer()
-    st.sidebar.title("Options Chain Analysis")
-    symbol = st.sidebar.text_input("Enter symbol (e.g., BANKNIFTY):", "BANKNIFTY")
-    expiry_date = st.sidebar.selectbox("Select expiry date:", [])
-
-    # Fetch expiry dates
-    data = analyzer.fetch_nse_data(symbol)
-    if data:
-        expiry_dates = data['records']['expiryDates']
-        expiry_date = st.sidebar.selectbox("Select expiry date:", expiry_dates)
-
-    # Submit button
-    if st.sidebar.button("Submit"):
-        analyzer.fetch_and_display_data(symbol, expiry_date)
