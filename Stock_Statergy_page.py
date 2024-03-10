@@ -216,17 +216,9 @@ class Stocks_statergy_page_class:
         end_date = datetime.now()
                 # Get stock data
         NSE = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS',
-            'BAJFINANCE.NS', 'BAJAJFINSV.NS', 'BPCL.NS', 'BHARTIARTL.NS',
-            'CIPLA.NS', 'COALINDIA.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'GAIL.NS', 'GRASIM.NS',
-            'HCLTECH.NS', 'HDFCBANK.NS', 'HEROMOTOCO.NS', 'HINDALCO.NS', 'HINDPETRO.NS',
-            'HINDUNILVR.NS', 'ITC.NS', 'ICICIBANK.NS', 'IBULHSGFIN.NS', 'IOC.NS',
-            'INDUSINDBK.NS', 'INFY.NS', 'JSWSTEEL.NS', 'KOTAKBANK.NS', 'LT.NS', 'M&M.NS', 'MARUTI.NS',
-            'NTPC.NS', 'ONGC.NS', 'POWERGRID.NS', 'RELIANCE.NS', 'SBIN.NS', 'SUNPHARMA.NS', 'TCS.NS',
-            'TATAMOTORS.NS', 'TATASTEEL.NS', 'TECHM.NS', 'TITAN.NS', 'UPL.NS', 'ULTRACEMCO.NS', 'VEDL.NS',
-            'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS']  # Add more if needed
+            'BAJFINANCE.NS', 'BAJAJFINSV.NS']  # Add more if needed
 
-        BSE = ['ADANIPORTS.BO', 'ASIANPAINT.BO', 'AXISBANK.BO', 'BAJAJ-AUTO.BO',
-            'BAJFINANCE.BO', 'BAJAJFINSV.BO', 'BPCL.BO', 'BHARTIARTL.BO',]  # Add more if needed
+        BSE = ['ADANIPORTS.BO', 'ASIANPAINT.BO']  # Add more if needed
 
         # User input for Stock Indices
         selected_index = st.sidebar.selectbox('Select Stock Index:', ['NSE', 'BSE']) # add more if required
@@ -235,6 +227,69 @@ class Stocks_statergy_page_class:
             stock_index = NSE
         else:
             stock_index = BSE
+        def isPivot(candle, window):
+                """
+                function that detects if a candle is a pivot/fractal point
+                args: candle index, window before and after candle to test if pivot
+                returns: 1 if pivot high, 2 if pivot low, 3 if both and 0 default
+                """
+                if candle-window < 0 or candle+window >= len(df_full[ticker]):
+                    return 0
+                
+                pivotHigh = 1
+                pivotLow = 2
+                for i in range(candle-window, candle+window+1):
+                    if df_full[ticker].iloc[candle].Low > df_full[ticker].iloc[i].Low:
+                        pivotLow=0
+                    if df_full[ticker].iloc[candle].High < df_full[ticker].iloc[i].High:
+                        pivotHigh=0
+                if (pivotHigh and pivotLow):
+                    return 3
+                elif pivotHigh:
+                    return pivotHigh
+                elif pivotLow:
+                    return pivotLow
+                else:
+                    return 0
+        def pointpos(x):
+            if x['isPivot']==2:
+                return x['Low']-1e-3
+            elif x['isPivot']==1:
+                return x['High']+1e-3
+            else:
+                return np.nan
+        def detect_structure(candle, backcandles, window):
+            """
+            Attention! window should always be greater than the pivot window! to avoid look ahead bias
+            """
+            if (candle <= (backcandles+window)) or (candle+window+1 >= len(df_full[ticker])):
+                return 0
+            
+            localdf = df_full[ticker].iloc[candle-backcandles-window:candle-window] #window must be greater than pivot window to avoid look ahead bias
+            highs = localdf[localdf['isPivot'] == 1].High.tail(3).values
+            lows = localdf[localdf['isPivot'] == 2].Low.tail(3).values
+            levelbreak = 0
+            zone_width = 0.001
+            if len(lows)==3:
+                support_condition = True
+                mean_low = lows.mean()
+                for low in lows:
+                    if abs(low-mean_low)>zone_width:
+                        support_condition = False
+                        break
+                if support_condition and (mean_low - df_full[ticker].loc[candle].Close)>zone_width*2:
+                    levelbreak = 1
+
+            if len(highs)==3:
+                resistance_condition = True
+                mean_high = highs.mean()
+                for high in highs:
+                    if abs(high-mean_high)>zone_width:
+                        resistance_condition = False
+                        break
+                if resistance_condition and (df_full[ticker].loc[candle].Close-mean_high)>zone_width*2:
+                    levelbreak = 2
+            return levelbreak    
 
         # Submit button
         if st.sidebar.button('Submit'):
@@ -245,4 +300,23 @@ class Stocks_statergy_page_class:
             candle_stick_func=stocks_helper_class()
 
             df_full = fetch_data.fetch_stock_data(stock_index, start_date, end_date, interval)
-            return df_full[1]
+            window=10
+            for ticker in range (len(df_full)):
+                
+                df_full[ticker]['isPivot'] = df_full[ticker].apply(lambda x: isPivot(x.name,window), axis=1) 
+                df_full[ticker]['pointpos'] = df_full[ticker].apply(lambda row: pointpos(row), axis=1) 
+                df_full[ticker]['pattern_detected'] = df_full[ticker].apply(lambda row: detect_structure(row.name, backcandles=100, window=25), axis=1)
+                fig = go.Figure(data=[go.Candlestick(x=df_full[ticker].index,
+                open=df_full[ticker]['Open'],
+                high=df_full[ticker]['High'],
+                low=df_full[ticker]['Low'],
+                close=df_full[ticker]['Close'])])
+
+                fig.add_scatter(x=df_full[ticker].index, y=df_full[ticker]['pointpos'], mode="markers",
+                                marker=dict(size=5, color="MediumPurple"),
+                                name="pivot")
+                fig.update_layout(xaxis_rangeslider_visible=False)
+                st.plotly_chart(fig) 
+                st.write(df_full[ticker][df_full[ticker]['pattern_detected']!=0])          
+
+        return df_full

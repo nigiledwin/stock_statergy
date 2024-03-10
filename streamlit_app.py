@@ -16,7 +16,7 @@ if page == 'Stock_Statergies':
         st.sidebar.title('Input Parameters')
         stock_statergy_breakout = Stocks_statergy_page_class()
         df_full=stock_statergy_breakout.breakout_func()
-        st.write(df_full)
+        st.write(df_full[1])
         
 
 
