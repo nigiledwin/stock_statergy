@@ -268,8 +268,11 @@ class Stocks_statergy_page_class:
             localdf = df_full[ticker].iloc[candle-backcandles-window:candle-window] #window must be greater than pivot window to avoid look ahead bias
             highs = localdf[localdf['isPivot'] == 1].High.tail(3).values
             lows = localdf[localdf['isPivot'] == 2].Low.tail(3).values
+            #slope, intercept, r_value, p_value, std_err = linregress(x_values, highs)
+            #y_values = slope * x_values + intercept
+            
             levelbreak = 0
-            zone_width = 0.001
+            zone_width = 5
             if len(lows)==3:
                 support_condition = True
                 mean_low = lows.mean()
@@ -289,7 +292,7 @@ class Stocks_statergy_page_class:
                         break
                 if resistance_condition and (df_full[ticker].loc[candle].Close-mean_high)>zone_width*2:
                     levelbreak = 2
-            return levelbreak    
+            return levelbreak
 
         # Submit button
         if st.sidebar.button('Submit'):
@@ -317,6 +320,7 @@ class Stocks_statergy_page_class:
                                 name="pivot")
                 fig.update_layout(xaxis_rangeslider_visible=False)
                 st.plotly_chart(fig) 
-                st.write(df_full[ticker][df_full[ticker]['pattern_detected']!=0])          
+                st.write(df_full[ticker][df_full[ticker]['pattern_detected']!=0]) 
+                   
 
         return df_full
