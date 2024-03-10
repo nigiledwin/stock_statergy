@@ -72,7 +72,7 @@ class Stocks_statergy_page_class:
                 tickers['Signal_line'] = tickers['MACD'].ewm(span=9, min_periods=0, adjust=True).mean()
                 tickers['Histogram'] = tickers['MACD'] - tickers['Signal_line']
                 tickers['previous_MACD'] = tickers['MACD'].shift(1)
-
+# create candlestick pattern to dataframe
                 tickers['candlestick_pattern_type'] = tickers.apply(lambda row: candle_stick_func.classify_candlestick(row), axis=1)
 
             # Apply buy_sell_signal to dataframe based on EMA
@@ -208,3 +208,41 @@ class Stocks_statergy_page_class:
             st.write(df_full)
         elif Statergy == 'Breakout_signal':
             None'''
+    def breakout_func(self):         
+        interval = st.sidebar.selectbox('Select interval:', ['15m', '30m', '1h','1d'])
+        # Specify start and end dates for historical data
+        no_backdays = st.sidebar.slider('Select number of past days:', 1, 300, 50)
+        start_date = datetime.now() - timedelta(days=no_backdays)
+        end_date = datetime.now()
+                # Get stock data
+        NSE = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS',
+            'BAJFINANCE.NS', 'BAJAJFINSV.NS', 'BPCL.NS', 'BHARTIARTL.NS',
+            'CIPLA.NS', 'COALINDIA.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'GAIL.NS', 'GRASIM.NS',
+            'HCLTECH.NS', 'HDFCBANK.NS', 'HEROMOTOCO.NS', 'HINDALCO.NS', 'HINDPETRO.NS',
+            'HINDUNILVR.NS', 'ITC.NS', 'ICICIBANK.NS', 'IBULHSGFIN.NS', 'IOC.NS',
+            'INDUSINDBK.NS', 'INFY.NS', 'JSWSTEEL.NS', 'KOTAKBANK.NS', 'LT.NS', 'M&M.NS', 'MARUTI.NS',
+            'NTPC.NS', 'ONGC.NS', 'POWERGRID.NS', 'RELIANCE.NS', 'SBIN.NS', 'SUNPHARMA.NS', 'TCS.NS',
+            'TATAMOTORS.NS', 'TATASTEEL.NS', 'TECHM.NS', 'TITAN.NS', 'UPL.NS', 'ULTRACEMCO.NS', 'VEDL.NS',
+            'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS']  # Add more if needed
+
+        BSE = ['ADANIPORTS.BO', 'ASIANPAINT.BO', 'AXISBANK.BO', 'BAJAJ-AUTO.BO',
+            'BAJFINANCE.BO', 'BAJAJFINSV.BO', 'BPCL.BO', 'BHARTIARTL.BO',]  # Add more if needed
+
+        # User input for Stock Indices
+        selected_index = st.sidebar.selectbox('Select Stock Index:', ['NSE', 'BSE']) # add more if required
+
+        if selected_index == 'NSE':
+            stock_index = NSE
+        else:
+            stock_index = BSE
+
+        # Submit button
+        if st.sidebar.button('Submit'):
+            #importing fetch_stock_data function  
+            from fetch_data_yf import fetch_data_yf
+            from stocks_helper_functions import stocks_helper_class
+            fetch_data=fetch_data_yf()
+            candle_stick_func=stocks_helper_class()
+
+            df_full = fetch_data.fetch_stock_data(stock_index, start_date, end_date, interval)
+            return df_full[1]
