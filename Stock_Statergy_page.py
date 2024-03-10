@@ -16,14 +16,14 @@ class Stocks_statergy_page_class:
         # Function to display Nifty and Bank Nifty analysis
     def option_analysis_page_func(self,Statergy): 
         if Statergy =='EMA':
-            interval = st.sidebar.selectbox('Select interval:', ['5m', '15m', '30m', '1h','1d'])
+            interval = st.sidebar.selectbox('Select interval:', ['15m', '30m', '1h','1d'])
             # Specify start and end dates for historical data
-            no_backdays = st.sidebar.slider('Select number of past days:', 1, 300, 20)
+            no_backdays = st.sidebar.slider('Select number of past days:', 1, 300, 50)
             start_date = datetime.now() - timedelta(days=no_backdays)
             end_date = datetime.now()
 
             # User input for short and long EMA windows
-            short_window = st.sidebar.selectbox('Select short EMA window:',[10, 20, 50])
+            short_window = st.sidebar.selectbox('Select short EMA window:',[20, 50])
             long_window = st.sidebar.selectbox('Select long EMA window:',[50, 200])
             no_backcandle=st.sidebar.selectbox('Select no candles to check for signal:',[5,10, 50])
 
@@ -77,7 +77,7 @@ class Stocks_statergy_page_class:
                     tickers['candlestick_pattern_type'] = tickers.apply(lambda row: candle_stick_func.classify_candlestick(row), axis=1)
  
                 # Apply buy_sell_signal to dataframe based on EMA
-                def buy_sell_signals(SMA_short, SMA_long, previous_SMA_Long):
+                def buy_sell_signals_ema(SMA_short, SMA_long, previous_SMA_Long):
                     if SMA_long > SMA_short and previous_SMA_Long < SMA_short:
                         return 'Bullish Crossover'
                     elif SMA_long < SMA_short and previous_SMA_Long > SMA_short:
@@ -93,20 +93,20 @@ class Stocks_statergy_page_class:
                 # Apply buy_sell_signal to dataframe based on EMA
                 for symbol_df in df_full:
                     if not symbol_df.empty:
-                        symbol_df['Signal_Type'] = np.vectorize(buy_sell_signals)(symbol_df['SMA_short'], symbol_df['SMA_long'], symbol_df['previous_SMA_Long'])
+                        symbol_df['Signal_Type'] = np.vectorize(buy_sell_signals_ema)(symbol_df['SMA_short'], symbol_df['SMA_long'], symbol_df['previous_SMA_Long'])
                     else:
                         print("DataFrame is empty or does not contain valid data.")
                 # Apply MACD_buy_sell to dataframe based on MACD
-                for symbol_df in df_full:
+                '''for symbol_df in df_full:
                     if not symbol_df.empty:
                         symbol_df['Signal_Type_MACD'] = np.vectorize(MACD_buy_sell)(symbol_df['MACD'], symbol_df['Signal_line'], symbol_df['previous_MACD'])
                     else:
-                        print("DataFrame is empty or does not contain valid data.")
+                        print("DataFrame is empty or does not contain valid data.")'''
                 # Dataframe to store buy signals
                 df_buy=pd.DataFrame()
                 for symbol in range(0,len(df_full)):
                 #buy_position=df_full[symbol].tail(5)['Position'].values
-                    if 'Bullish Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type'].values and 'Bullish MACD Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type_MACD'].values:
+                    if 'Bullish Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type'].values:
                         df=pd.DataFrame({symbol:[df_full[symbol]['Symbol'].mode()]})
                         df_buy = pd.concat([df_buy, df], axis=1)   
 
@@ -114,9 +114,7 @@ class Stocks_statergy_page_class:
                 df_sell=pd.DataFrame()
                 for symbol in range(0,len(df_full)):
                 #buy_position=df_full[symbol].tail(50)['Position'].values
-                    if 'Bearish Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type'].values and 'Bearish MACD Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type_MACD'].values:
-                    #array_name = f'array{i+1}'
-
+                    if 'Bearish Crossover' in df_full[symbol].tail(no_backcandle)['Signal_Type'].values:                   
                         df=pd.DataFrame({symbol:[df_full[symbol]['Symbol'].mode()]})
                         df_sell = pd.concat([df_sell, df], axis=1)
                 #st.write(df_full[0][df_full[0]['Signal_Type_MACD']=='Bullish MACD Crossover'])            
@@ -133,14 +131,15 @@ class Stocks_statergy_page_class:
                 # Candlestick chart with SMA
                 for i in df_buy.index:
                     fig = go.Figure()
-                    fig.add_trace(go.Candlestick(x=df_full[i].index, open=df_full[i]['Open'], high=df_full[i]['High'],
-                                                low=df_full[i]['Low'], close=df_full[i]['Close']))
-                    fig.add_trace(go.Scatter(x=df_full[i].index, y=df_full[i]['SMA_short'], mode='lines', name='Short EMA',
+                    no_candle_plot=100
+                    fig.add_trace(go.Candlestick(x=df_full[i].tail(no_candle_plot).index, open=df_full[i].tail(no_candle_plot)['Open'], high=df_full[i].tail(no_candle_plot)['High'],
+                                                low=df_full[i].tail(no_candle_plot)['Low'], close=df_full[i].tail(no_candle_plot)['Close']))
+                    fig.add_trace(go.Scatter(x=df_full[i].tail(no_candle_plot).index, y=df_full[i].tail(no_candle_plot)['SMA_short'], mode='lines', name='Short EMA',
                                             line=dict(color='blue', width=2)))
-                    fig.add_trace(go.Scatter(x=df_full[i].index, y=df_full[i]['SMA_long'], mode='lines', name='Long EMA',
+                    fig.add_trace(go.Scatter(x=df_full[i].tail(no_candle_plot).tail(no_candle_plot).index, y=df_full[i].tail(no_candle_plot)['SMA_long'], mode='lines', name='Long EMA',
                                             line=dict(color='red', width=2)))
-                    buy_signals = df_full[i][df_full[i]['Signal_Type'] == 'Bullish Crossover']
-                    sell_signals = df_full[i][df_full[i]['Signal_Type'] == 'Bearish Crossover']
+                    buy_signals = df_full[i].tail(no_candle_plot)[df_full[i]['Signal_Type'] == 'Bullish Crossover']
+                    sell_signals = df_full[i].tail(no_candle_plot)[df_full[i]['Signal_Type'] == 'Bearish Crossover']
                     fig.add_trace(go.Scatter(x=buy_signals.index, y=buy_signals['SMA_short'], mode='markers',
                                             marker=dict(color='green', size=10), name='Buy Signal'))
                     fig.add_trace(go.Scatter(x=sell_signals.index, y=sell_signals['SMA_short'], mode='markers',
@@ -148,17 +147,9 @@ class Stocks_statergy_page_class:
                     fig.update_layout(title=f'Candlestick Chart with SMA for {df_full[i]["Symbol"].iloc[0]}',
                                     xaxis_title='Date', yaxis_title='Price')
 
-
-                    # Calculate y-axis range based on latest 100 close prices
-                    latest_100_close_prices = df_full[i]['Close'].tail(500)
-                    y_range = [latest_100_close_prices.min() - 10, latest_100_close_prices.max() + 10]
-                    fig.update_layout(yaxis=dict(range=y_range))
-                    fig.update_layout(xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
-                    fig.update_layout(width=700, height=700)
-
                     st.plotly_chart(fig)
 
-                    fig1 = go.Figure()
+                    '''fig1 = go.Figure()
 
                     fig1.add_trace(go.Scatter(x=df_full[i].index, y=df_full[i]['MACD'], mode='lines', name='MACD',
                                             line=dict(color='black', width=2)))
@@ -190,7 +181,7 @@ class Stocks_statergy_page_class:
                     fig1.update_layout(width=700, height=500)
                     st.write(df_full[i][df_full[i]['Signal_Type_MACD']=='Bullish MACD Crossover'])   
 
-                    st.plotly_chart(fig1)
+                    st.plotly_chart(fig1)'''
                 
             elif Statergy == 'Super Trend':
                 def get_stock_data(symbols, start_date, end_date, time_frame):
