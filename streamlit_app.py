@@ -6,11 +6,15 @@ page = st.sidebar.radio("Select Page", ['Stock_Statergies', 'Stock_Option_Analys
 
 if page == 'Stock_Statergies':
     from Stock_Statergy_page import Stocks_statergy_page_class
-    Statergy = st.sidebar.selectbox('Select the statergy:', ['EMA', 'Super Trend'])
+    Statergy = st.sidebar.selectbox('Select the statergy:', ['EMA','Breakout_signal' 'Super Trend'])
     # Sidebar layout
-    st.sidebar.title('Input Parameters')
-    stock_statergy = Stocks_statergy_page_class()
-    stock_statergy.option_analysis_page_func(Statergy)
+    if Statergy=='EMA':
+        st.sidebar.title('Input Parameters')
+        stock_statergy = Stocks_statergy_page_class()
+        stock_statergy.ema_func()
+    elif Statergy=='Breakout_signal':
+        pass
+
 
 
 elif page == 'Stock_Option_Analysis':
