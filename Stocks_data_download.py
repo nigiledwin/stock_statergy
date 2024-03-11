@@ -1,3 +1,5 @@
+#This file downloads historical stocks data and saves in as csv
+
 import yfinance as yf
 import numpy as np
 import pandas as pd
