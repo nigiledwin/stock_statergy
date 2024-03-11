@@ -2,7 +2,7 @@ import streamlit as st
 
 
 # Add navigation to different pages
-page = st.sidebar.radio("Select Page", ['Stock_Statergies', 'Stock_Option_Analysis','Stocks_Analysis','ML_Models'])
+page = st.sidebar.radio("Select Page", ['Stock_Statergies', 'Stock_Option_Analysis','Stocks_Analysis','ML_Models','Backtesting_statergies'])
 
 if page == 'Stock_Statergies':
     from Stock_Statergy_page import Stocks_statergy_page_class
@@ -16,7 +16,7 @@ if page == 'Stock_Statergies':
         st.sidebar.title('Input Parameters')
         stock_statergy_breakout = Stocks_statergy_page_class()
         df_full=stock_statergy_breakout.breakout_func()
-        st.write(df_full[1])
+        
         
 
 
@@ -48,4 +48,6 @@ elif page == 'Stocks_Analysis':
         fun_df=fundamentals.create_fundamental_features(ticker)
         st.write(fun_df)
 elif page == 'ML_Models':
+    pass        
+elif page == 'Backtesting_statergies':
     pass        

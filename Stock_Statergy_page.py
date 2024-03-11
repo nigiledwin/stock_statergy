@@ -319,8 +319,10 @@ class Stocks_statergy_page_class:
                                 marker=dict(size=5, color="MediumPurple"),
                                 name="pivot")
                 fig.update_layout(xaxis_rangeslider_visible=False)
+                fig.update_layout(title=f'Pivot points for {df_full[ticker]["Symbol"].iloc[0]}',
+                                xaxis_title='Date', yaxis_title='Price')
                 st.plotly_chart(fig) 
                 st.write(df_full[ticker][df_full[ticker]['pattern_detected']!=0]) 
                    
 
-        return df_full
+            return df_full
