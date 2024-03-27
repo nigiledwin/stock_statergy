@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 class feature_engg_class:
     def __init__(self):
@@ -10,6 +12,8 @@ class feature_engg_class:
         # Convert the 'Date' column to datetime format
         df['Date'] = pd.to_datetime(df['Date'])
 
+        #adding new colum with next day close value
+        df['Close_Next_Day'] = df['Close'].shift(-1)
         # Calculate some common technical indicators
 
         # Moving Averages
@@ -42,6 +46,13 @@ class feature_engg_class:
         df.dropna(inplace=True)
 
         return df
+df_nse = pd.read_csv('stock_data_NSE_1d.csv')
+df_ADANIPORTS=df_nse[df_nse['Symbol']=='ADANIPORTS.NS']
+
+feature_df=feature_engg_class()
+df_ADANIPORTS=feature_df.feature_engg_func(df_ADANIPORTS)
+print(df_ADANIPORTS)
+
 
 
 

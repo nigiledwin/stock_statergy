@@ -48,6 +48,11 @@ elif page == 'Stocks_Analysis':
         fun_df=fundamentals.create_fundamental_features(ticker)
         st.write(fun_df)
 elif page == 'ML_Models':
-    pass        
+    from Final_ML_Model import ML_model_run_class
+    ml_model_obj = ML_model_run_class()
+    model_result = ml_model_obj.model_run_fun()
+    st.write("Df_Adani:", model_result[0])
+    st.write("Df_Adani:", model_result[1])
+      
 elif page == 'Backtesting_statergies':
     pass        
